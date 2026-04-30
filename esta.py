@@ -65,7 +65,7 @@ dicionario_colunas = {
     'Present_employment(years)': 'Tempo de Emprego (anos)'
 }
 
-# Dicionário para traduzir os dados internos (Valores das linhas)
+# dicionário para traduzir os dados internos
 dicionario_valores = {
     'skilled': 'Qualificado',
     'unskilled resident': 'Não qualificado (Residente)',

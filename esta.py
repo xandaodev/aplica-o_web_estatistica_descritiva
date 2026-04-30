@@ -29,6 +29,17 @@ try:
     st.markdown(f"Professor: Davi Butturi Alvim")
     st.markdown("---")
 
+    # contextualizacao
+    with st.expander("Contextualização e Objetivo da Análise (Clique para expandir)", expanded=False):
+        st.markdown("""
+        **História dos Dados:**
+        Este conjunto de dados é uma adaptação do clássico *German Credit Data*. Ele contém informações demográficas, financeiras e de histórico bancário de 1.000 solicitantes de crédito de um banco alemão. Ele é amplamente utilizado para entender padrões de risco e concessão de crédito.
+        
+        **Pergunta de Interesse:**
+        > *Qual é o perfil demográfico e financeiro dos clientes que solicitam os maiores volumes de crédito, e como a idade do solicitante influencia o valor e a finalidade do empréstimo solicitado?*
+        """)
+    st.markdown("---")
+
     # Barra Lateral
     st.sidebar.header("Configurações")
     objetivos = df['Purpose_of_the_credit'].unique()

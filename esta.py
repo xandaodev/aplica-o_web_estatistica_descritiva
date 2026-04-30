@@ -21,6 +21,45 @@ traducoes = {
     'count': 'Quantidade'
 }
 
+# dicionário para traduzir a interface (Camada Visual)
+# Dicionário COMPLETO para traduzir a interface (Camada Visual)
+dicionario_colunas = {
+    # As que já tínhamos
+    'Age_in_years': 'Idade (anos)',
+    'Credit_amount': 'Valor do Crédito (€)',
+    'Duration_in_months': 'Duração do Empréstimo (meses)',
+    'Purpose_of_the_credit': 'Objetivo do Crédito',
+    'Sex_&_Marital_Status': 'Sexo e Estado Civil',
+    'Housing': 'Moradia',
+    'Job': 'Emprego',
+    'Saving_accounts': 'Conta Poupança',
+    'Checking_account': 'Conta Corrente',
+    'Credit_history': 'Histórico de Crédito',
+    
+    # As que apareceram na sua imagem e o restante do dataset:
+    'Other_installment_plans_(banks/stores)': 'Outros Planos de Parcelamento',
+    'Other_installment_plans__banks_stores_': 'Outros Planos de Parcelamento', # Versão sem barras/parênteses por segurança
+    'Number_of_existing_credits_at_this_bank': 'Qtd. de Créditos Existentes (Neste Banco)',
+    'Number_of_people_being_liable_to_provide_maintenance_for': 'Número de Dependentes',
+    'Telephone': 'Telefone',
+    'Foreign_worker': 'Trabalhador Estrangeiro',
+    'Status_of_existing_checking_account': 'Status da Conta Corrente',
+    'Present_employment_since': 'Tempo no Emprego Atual',
+    'Installment_rate_in_percentage_of_disposable_income': 'Taxa da Parcela (% da Renda)',
+    'Present_residence_since': 'Tempo na Residência Atual',
+    'Property': 'Propriedades / Bens',
+    'Other_debtors_/_guarantors': 'Outros Devedores / Fiadores',
+    'Risk': 'Risco de Crédito',
+
+    'Status_of_savings_account_bonds': 'Status da Poupança / Títulos',
+    'Present_employment_years': 'Tempo de Emprego (anos)',
+    'personal_status': 'Estado Civil / Status Pessoal',
+    'Present_residence_since_X_years': 'Tempo de Residência (anos)',
+    
+    'Status_of_savings_account/bonds': 'Status da Poupança / Títulos',
+    'Present_employment(years)': 'Tempo de Emprego (anos)'
+}
+
 try:
     df = load_data()
     
@@ -75,12 +114,12 @@ try:
     c_left, c_right = st.columns(2)
     with c_left:
         st.markdown("**Participação por Objetivo de Crédito**")
-        fig_pizza = px.pie(df_filtrado, names='Purpose_of_the_credit', hole=0.4, color_discrete_sequence=px.colors.qualitative.Pastel)
+        fig_pizza = px.pie(df_filtrado, names='Purpose_of_the_credit', hole=0.4, color_discrete_sequence=px.colors.qualitative.Pastel, labels=dicionario_colunas)
         st.plotly_chart(fig_pizza, use_container_width=True)
     
     with c_right:
         st.markdown("**Boxplot: Dispersão e Outliers de Valores**")
-        fig_box = px.box(df_filtrado, x='Purpose_of_the_credit', y='Credit_amount', color='Purpose_of_the_credit')
+        fig_box = px.box(df_filtrado, x='Purpose_of_the_credit', y='Credit_amount', color='Purpose_of_the_credit', labels=dicionario_colunas)
         st.plotly_chart(fig_box, use_container_width=True)
 
     # tabela estatística
@@ -98,15 +137,16 @@ try:
     st.markdown("O Gráfico de Dispersão abaixo nos permite cruzar a Idade do cliente com o Valor solicitado, buscando correlações.")
     
     fig_scatter = px.scatter(
-        df_filtrado, 
-        x='Age_in_years', 
-        y='Credit_amount', 
-        color='Purpose_of_the_credit',
-        opacity=0.7,
-        marginal_y="violin",
-        marginal_x="histogram",
-        title="Dispersão: Idade vs Valor do Crédito"
-    )
+    df_filtrado, 
+    x='Age_in_years', 
+    y='Credit_amount', 
+    color='Purpose_of_the_credit',
+    opacity=0.7,
+    marginal_y="violin",
+    marginal_x="histogram",
+    title="Dispersão: Idade vs Valor do Crédito",
+    labels=dicionario_colunas 
+)
     st.plotly_chart(fig_scatter, use_container_width=True)
 
     with st.expander("Interpretação do Gráfico (Insights)"):
@@ -128,14 +168,17 @@ try:
         colunas_disponiveis.remove('id')
         
     # cria o selectbox com todas as colunas, deixando a idade como padrão ao abrir
-    var_x = st.selectbox("Selecione a Variável para análise:", colunas_disponiveis, index=colunas_disponiveis.index('Age_in_years'))
+    var_x = st.selectbox(
+        "Selecione a Variável para análise:", 
+        colunas_disponiveis, 
+        index=colunas_disponiveis.index('Age_in_years'),
+        format_func=lambda x: dicionario_colunas.get(x, x)
+    )
     
     if pd.api.types.is_numeric_dtype(df[var_x]):
-        # se for número, faz um histograma 
-        fig_dinamico = px.histogram(df_filtrado, x=var_x, color='Purpose_of_the_credit', barmode='overlay', title=f"Distribuição de {var_x}")
+        fig_dinamico = px.histogram(df_filtrado, x=var_x, color='Purpose_of_the_credit', barmode='overlay', title=f"Distribuição de {dicionario_colunas.get(var_x, var_x)}", labels=dicionario_colunas)
     else:
-        # se for texto/categoria, faz um gráfico de barras agrupado
-        fig_dinamico = px.histogram(df_filtrado, x=var_x, color='Purpose_of_the_credit', barmode='group', title=f"Contagem por {var_x}")
+        fig_dinamico = px.histogram(df_filtrado, x=var_x, color='Purpose_of_the_credit', barmode='group', title=f"Contagem por {dicionario_colunas.get(var_x, var_x)}", labels=dicionario_colunas)
         
     st.plotly_chart(fig_dinamico, use_container_width=True)
 

@@ -93,6 +93,30 @@ try:
     else:
         st.warning("Selecione ao menos uma métrica na barra lateral.")
 
+    # RESPONDENDO À PERGUNTA
+    st.subheader("A quantidade de empréstimo por categoria muda de acordo com a idade?")
+    st.markdown("O Gráfico de Dispersão abaixo nos permite cruzar a Idade do cliente com o Valor solicitado, buscando correlações.")
+    
+    fig_scatter = px.scatter(
+        df_filtrado, 
+        x='Age_in_years', 
+        y='Credit_amount', 
+        color='Purpose_of_the_credit',
+        opacity=0.7,
+        marginal_y="violin",
+        marginal_x="histogram",
+        title="Dispersão: Idade vs Valor do Crédito"
+    )
+    st.plotly_chart(fig_scatter, use_container_width=True)
+
+    with st.expander("Interpretação do Gráfico (Insights)"):
+        st.markdown("""
+        * **Concentração Jovem:** Existe uma densidade muito alta de pedidos feitos por clientes entre 20 e 35 anos, gerando um aglomerado na parte esquerda do gráfico.
+        * **Picos Isolados:** Embora a maioria dos pedidos de alto valor (acima de € 10.000) sejam para categorias específicas como "negócios" (business) ou "carros", vemos que a idade nesses picos varia bastante.
+        * **Conclusão Inicial:** A idade, de forma isolada, não dita *exatamente* o valor do empréstimo (a dispersão é grande), mas dita fortemente a *frequência* das categorias solicitadas.
+        """)
+    st.markdown("---")
+
     # perfil de idade
     st.subheader("Perfil de Idade")
     fig_hist = px.histogram(df_filtrado, x='Age_in_years', color='Purpose_of_the_credit', barmode='overlay')

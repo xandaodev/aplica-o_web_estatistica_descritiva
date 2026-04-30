@@ -72,8 +72,8 @@ try:
     # distribuição e dispersão
     c_left, c_right = st.columns(2)
     with c_left:
-        st.subheader("Participação por Objetivo")
-        fig_pizza = px.pie(df_filtrado, names='Purpose_of_the_credit', hole=0.4)
+        st.markdown("**Participação por Objetivo de Crédito**")
+        fig_pizza = px.pie(df_filtrado, names='Purpose_of_the_credit', hole=0.4, color_discrete_sequence=px.colors.qualitative.Pastel)
         st.plotly_chart(fig_pizza, use_container_width=True)
     
     with c_right:

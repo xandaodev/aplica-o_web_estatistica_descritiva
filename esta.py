@@ -40,11 +40,18 @@ try:
         """)
     st.markdown("---")
 
-    # Barra Lateral
-    st.sidebar.header("Configurações")
-    objetivos = df['Purpose_of_the_credit'].unique()
-    escolha = st.sidebar.multiselect("Filtrar Objetivos", objetivos, default=objetivos[:3])
+    # barra lateral (filtros e UI melhorada)
+    st.sidebar.header("🛠️ Configurações e Filtros")
+    objetivos_disponiveis = df['Purpose_of_the_credit'].unique().tolist()
     
+    # botão para selecionar/remover todos rapidamente
+    selecionar_todos = st.sidebar.checkbox("Selecionar Todos os Objetivos", value=True)
+    
+    if selecionar_todos:
+        escolha = st.sidebar.multiselect("Filtrar Objetivos", objetivos_disponiveis, default=objetivos_disponiveis)
+    else:
+        escolha = st.sidebar.multiselect("Filtrar Objetivos", objetivos_disponiveis, default=[])
+        
     # escolha de medidas-resumo 
     metricas_selecionadas = st.sidebar.multiselect(
         "Escolha as Medidas-Resumo",

@@ -8,7 +8,12 @@ st.set_page_config(page_title="Estatística UFSJ - Crédito", layout="wide")
 @st.cache_data
 def load_data():
     df = pd.read_csv("dataset.csv")
-    df.columns = [col.replace(' ', '_') for col in df.columns]
+    # limpando nomes das colunas
+    df.columns = [col.replace(' ', '_').replace('/', '_').replace('(', '_').replace(')', '') for col in df.columns]
+    
+    # Substitui todos os valores em inglês pelos de português em todo o dataframe de uma vez só
+    df = df.replace(dicionario_valores)
+    
     return df
 
 # traduzindo as métricas
@@ -58,6 +63,24 @@ dicionario_colunas = {
     
     'Status_of_savings_account/bonds': 'Status da Poupança / Títulos',
     'Present_employment(years)': 'Tempo de Emprego (anos)'
+}
+
+# Dicionário para traduzir os dados internos (Valores das linhas)
+dicionario_valores = {
+    'skilled': 'Qualificado',
+    'unskilled resident': 'Não qualificado (Residente)',
+    'high qualif/self emp/mgmt': 'Alta qualificação / Autônomo',
+    'unemp/unskilled non res': 'Desempregado / Não qualificado (Não res.)',
+    
+    'radio/tv': 'Rádio/TV',
+    'education': 'Educação',
+    'furniture/equipment': 'Móveis/Equipamentos',
+    'car': 'Carro',
+    'business': 'Negócios',
+    'domestic appliances': 'Eletrodomésticos',
+    'repairs': 'Reparos',
+    'vacation/others': 'Férias/Outros'
+    
 }
 
 try:

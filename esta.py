@@ -70,6 +70,8 @@ try:
     st.markdown("---")
 
     # distribuição e dispersão
+    st.subheader("📈 Distribuição e Dispersão (Insights Iniciais)")
+    
     c_left, c_right = st.columns(2)
     with c_left:
         st.markdown("**Participação por Objetivo de Crédito**")

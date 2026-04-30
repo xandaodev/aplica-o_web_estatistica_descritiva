@@ -117,10 +117,27 @@ try:
         """)
     st.markdown("---")
 
-    # perfil de idade
-    st.subheader("Perfil de Idade")
-    fig_hist = px.histogram(df_filtrado, x='Age_in_years', color='Purpose_of_the_credit', barmode='overlay')
-    st.plotly_chart(fig_hist, use_container_width=True)
+    # antes aqui só mostrava o histograma do perfil de idade, agora o usuário pode utilizar qualquer coluna do dataset
+    # verificando automaticamente se é número ou texto, e criando um histograma ou gráfico de barras agrupado, de acordo com o que foi selecionado
+    st.subheader("🔄 Exploração Dinâmica (Usando todos os dados)")
+    st.markdown("Selecione qualquer variável do dataset para visualizar como ela se comporta no nosso conjunto filtrado.")
+    
+    # pega todas as colunas do dataset
+    colunas_disponiveis = df.columns.tolist()
+    if 'id' in colunas_disponiveis:
+        colunas_disponiveis.remove('id')
+        
+    # cria o selectbox com todas as colunas, deixando a idade como padrão ao abrir
+    var_x = st.selectbox("Selecione a Variável para análise:", colunas_disponiveis, index=colunas_disponiveis.index('Age_in_years'))
+    
+    if pd.api.types.is_numeric_dtype(df[var_x]):
+        # se for número, faz um histograma 
+        fig_dinamico = px.histogram(df_filtrado, x=var_x, color='Purpose_of_the_credit', barmode='overlay', title=f"Distribuição de {var_x}")
+    else:
+        # se for texto/categoria, faz um gráfico de barras agrupado
+        fig_dinamico = px.histogram(df_filtrado, x=var_x, color='Purpose_of_the_credit', barmode='group', title=f"Contagem por {var_x}")
+        
+    st.plotly_chart(fig_dinamico, use_container_width=True)
 
 except Exception as e:
     st.error(f"Erro: Verifique se 'dataset.csv' está na pasta. Detalhe: {e}")

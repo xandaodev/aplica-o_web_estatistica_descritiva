@@ -77,7 +77,7 @@ try:
         st.plotly_chart(fig_pizza, use_container_width=True)
     
     with c_right:
-        st.subheader("Boxplot: Dispersão de Valores")
+        st.markdown("**Boxplot: Dispersão e Outliers de Valores**")
         fig_box = px.box(df_filtrado, x='Purpose_of_the_credit', y='Credit_amount', color='Purpose_of_the_credit')
         st.plotly_chart(fig_box, use_container_width=True)
 

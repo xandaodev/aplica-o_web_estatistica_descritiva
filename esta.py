@@ -186,7 +186,7 @@ try:
 
     # ESTATÍSTICA INFERENCIAL - REGRESSÕES
     st.subheader("🔬 Análise Inferencial: Modelagem e Teste de Hipóteses")
-    st.markdown("Testando matematicamente se as percepções visuais possuem significância estatística.")
+    st.markdown("Testando matematicamente as variáveis em todo o conjunto de dados (População Global), independente do filtro de categorias.")
 
     col_inf1, col_inf2 = st.columns(2)
 
@@ -195,34 +195,42 @@ try:
         st.caption("Modelo: Regressão Linear Múltipla (OLS) | Variável Contínua")
         
         try:
-            # ajusta o modelo de regressão linear para variável contínua
-            modelo_valor = smf.ols('Credit_amount ~ Age_in_years', data=df_filtrado).fit()
+            # UPGRADE: data=df para rodar na população global, independente do motivo
+            modelo_valor = smf.ols('Credit_amount ~ Age_in_years', data=df).fit()
             p_val_valor = modelo_valor.pvalues.get('Age_in_years', 1)
+            r2_valor = modelo_valor.rsquared # UPGRADE: Pega o R-Quadrado
             
-            st.metric("P-Value (Idade)", f"{p_val_valor:.4f}")
+            c1, c2 = st.columns(2)
+            c1.metric("P-Value (Idade)", f"{p_val_valor:.4f}")
+            c2.metric("R² (Poder de Explicação)", f"{r2_valor:.4f}")
+            
             if p_val_valor < 0.05:
-                st.success("Resultado Significativo (p < 0.05). A idade influencia estatisticamente o valor do empréstimo.")
+                st.success(f"Significativo (p < 0.05). Porém, a idade explica apenas {r2_valor*100:.2f}% da variação do valor do empréstimo.")
             else:
-                st.warning("Sem Significância (p >= 0.05). A idade, isoladamente, não é uma boa preditora do valor. A variação ocorre por outros fatores.")
+                st.warning("Sem Significância (p >= 0.05). A idade não é uma preditora estatisticamente válida para prever o valor financeiro.")
         except Exception as e:
-            st.error("Dados insuficientes para regressão linear com o filtro atual.")
+            st.error("Erro ao calcular OLS.")
 
     with col_inf2:
         st.markdown("**2. N° de Empréstimos x Idade**")
         st.caption("Modelo: Regressão de Poisson | Variável de Contagem Discreta")
         
         try:
-            #ajusta o modelo Poisson para variável de contagem discreta
-            modelo_qtd = smf.poisson('Number_of_existing_credits_at_this_bank ~ Age_in_years', data=df_filtrado).fit()
+            #data=df para rodar na população global
+            modelo_qtd = smf.poisson('Number_of_existing_credits_at_this_bank ~ Age_in_years', data=df).fit()
             p_val_qtd = modelo_qtd.pvalues.get('Age_in_years', 1)
+            pr2_qtd = modelo_qtd.prsquared # UPGRADE: Pseudo R-Quadrado de McFadden
             
-            st.metric("P-Value (Idade)", f"{p_val_qtd:.4f}")
+            c1, c2 = st.columns(2)
+            c1.metric("P-Value (Idade)", f"{p_val_qtd:.4f}")
+            c2.metric("Pseudo R²", f"{pr2_qtd:.4f}")
+            
             if p_val_qtd < 0.05:
-                st.success("Resultado Significativo (p < 0.05). A idade influencia estatisticamente a quantidade de pedidos no banco.")
+                st.success("Significativo (p < 0.05). Existe relação matemática entre a idade e a quantidade de pedidos que o cliente tem no banco.")
             else:
-                st.warning("Sem Significância (p >= 0.05). A idade não afeta matematicamente o número de empréstimos do cliente.")
+                st.warning("Sem Significância (p >= 0.05). A idade não afeta o número de empréstimos do cliente.")
         except Exception as e:
-            st.error("Dados insuficientes para regressão de Poisson com o filtro atual.")
+            st.error("Erro ao calcular Poisson.")
             
     st.markdown("---")
 

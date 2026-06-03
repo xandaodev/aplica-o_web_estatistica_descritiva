@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import statsmodels.formula.api as smf # Nova importação para os modelos de regressão
 
 # configuração e carregamento inicial da página
 st.set_page_config(page_title="Estatística UFSJ - Crédito", layout="wide")
@@ -86,7 +87,7 @@ try:
     df = load_data()
     
     st.title("Dashboard de Crédito: Análise Estatística")
-    st.markdown(f"**Aluno:**  Alexandre Vital   |   UFSJ   |   ESTATÍSTICA E PROBABILIDADE ")
+    st.markdown(f"**Aluno:** Alexandre Vital   |   UFSJ   |   ESTATÍSTICA E PROBABILIDADE ")
     st.markdown(f"Professor: Davi Butturi Alvim")
     st.markdown("---")
 
@@ -116,7 +117,6 @@ try:
     else:
         escolha = st.sidebar.multiselect("Filtrar Objetivos", objetivos_disponiveis, default=[])
         
-    # escolha dinâmica das medidas-resumo que irão compor a tabela estatística
     metricas_selecionadas = st.sidebar.multiselect(
         "Escolha as Medidas-Resumo",
         options=list(traducoes.keys()), 
@@ -127,7 +127,11 @@ try:
     # aplica o filtro ao dataframe mantendo apenas as categorias escolhidas
     df_filtrado = df[df['Purpose_of_the_credit'].isin(escolha)]
 
-    # informacoes de topo divididas em 3 colunas para otimização do espaço na tela
+    if df_filtrado.empty:
+        st.warning("Por favor, selecione ao menos um objetivo de crédito para visualizar os dados.")
+        st.stop()
+
+    # informacoes de topo
     col1, col2, col3 = st.columns(3)
     col1.metric("Total de Pedidos", len(df_filtrado))
     col2.metric("Média de Valor", f"€ {df_filtrado['Credit_amount'].mean():.2f}")
@@ -159,34 +163,69 @@ try:
         st.dataframe(resumo.style.format("{:.2f}").background_gradient(cmap='Blues'), use_container_width=True)
     else:
         st.warning("Selecione ao menos uma métrica na barra lateral.")
-
-    # respondendo à pergunta
-    st.subheader("A quantidade de empréstimo por categoria muda de acordo com a idade?")
-    st.markdown("O Gráfico de Dispersão abaixo nos permite cruzar a Idade do cliente com o Valor solicitado, buscando correlações.")
-    
-    fig_scatter = px.scatter(
-    df_filtrado, 
-    x='Age_in_years', 
-    y='Credit_amount', 
-    color='Purpose_of_the_credit',
-    opacity=0.7,
-    marginal_y="violin",
-    marginal_x="histogram",
-    title="Dispersão: Idade vs Valor do Crédito",
-    labels=dicionario_colunas 
-)
-    st.plotly_chart(fig_scatter, use_container_width=True)
-
-    with st.expander("Interpretação do Gráfico (Insights)"):
-        st.markdown("""
-        * **Concentração Jovem:** Existe uma densidade muito alta de pedidos feitos por clientes entre 20 e 35 anos, gerando um aglomerado na parte esquerda do gráfico.
-        * **Picos Isolados:** Embora a maioria dos pedidos de alto valor (acima de € 10.000) sejam para categorias específicas como "negócios" (business) ou "carros", vemos que a idade nesses picos varia bastante.
-        * **Conclusão Inicial:** A idade, de forma isolada, não dita *exatamente* o valor do empréstimo (a dispersão é grande), mas dita fortemente a *frequência* das categorias solicitadas.
-        """)
     st.markdown("---")
 
-    # antes aqui só mostrava o histograma do perfil de idade, agora o usuário pode utilizar qualquer coluna do dataset
-    # verificando automaticamente se é número ou texto, e criando um histograma ou gráfico de barras agrupado, de acordo com o que foi selecionado
+    # respondendo à pergunta visualmente
+    st.subheader("A quantidade de empréstimo por categoria muda de acordo com a idade?")
+    st.markdown("O Gráfico de Dispersão abaixo nos permite cruzar a Idade do cliente com o Valor solicitado, buscando correlações visuais.")
+    
+    fig_scatter = px.scatter(
+        df_filtrado, 
+        x='Age_in_years', 
+        y='Credit_amount', 
+        color='Purpose_of_the_credit',
+        opacity=0.7,
+        marginal_y="violin",
+        marginal_x="histogram",
+        title="Dispersão: Idade vs Valor do Crédito",
+        labels=dicionario_colunas 
+    )
+    st.plotly_chart(fig_scatter, use_container_width=True)
+    st.markdown("---")
+
+    # ESTATÍSTICA INFERENCIAL - REGRESSÕES
+    st.subheader("🔬 Análise Inferencial: Modelagem e Teste de Hipóteses")
+    st.markdown("Testando matematicamente se as percepções visuais possuem significância estatística.")
+
+    col_inf1, col_inf2 = st.columns(2)
+
+    with col_inf1:
+        st.markdown("**1. Valor do Empréstimo x Idade**")
+        st.caption("Modelo: Regressão Linear Múltipla (OLS) | Variável Contínua")
+        
+        try:
+            # ajusta o modelo de regressão linear para variável contínua
+            modelo_valor = smf.ols('Credit_amount ~ Age_in_years', data=df_filtrado).fit()
+            p_val_valor = modelo_valor.pvalues.get('Age_in_years', 1)
+            
+            st.metric("P-Value (Idade)", f"{p_val_valor:.4f}")
+            if p_val_valor < 0.05:
+                st.success("Resultado Significativo (p < 0.05). A idade influencia estatisticamente o valor do empréstimo.")
+            else:
+                st.warning("Sem Significância (p >= 0.05). A idade, isoladamente, não é uma boa preditora do valor. A variação ocorre por outros fatores.")
+        except Exception as e:
+            st.error("Dados insuficientes para regressão linear com o filtro atual.")
+
+    with col_inf2:
+        st.markdown("**2. N° de Empréstimos x Idade**")
+        st.caption("Modelo: Regressão de Poisson | Variável de Contagem Discreta")
+        
+        try:
+            #ajusta o modelo Poisson para variável de contagem discreta
+            modelo_qtd = smf.poisson('Number_of_existing_credits_at_this_bank ~ Age_in_years', data=df_filtrado).fit()
+            p_val_qtd = modelo_qtd.pvalues.get('Age_in_years', 1)
+            
+            st.metric("P-Value (Idade)", f"{p_val_qtd:.4f}")
+            if p_val_qtd < 0.05:
+                st.success("Resultado Significativo (p < 0.05). A idade influencia estatisticamente a quantidade de pedidos no banco.")
+            else:
+                st.warning("Sem Significância (p >= 0.05). A idade não afeta matematicamente o número de empréstimos do cliente.")
+        except Exception as e:
+            st.error("Dados insuficientes para regressão de Poisson com o filtro atual.")
+            
+    st.markdown("---")
+
+    # exploração dinâmica
     st.subheader("🔄 Exploração Dinâmica (Usando todos os dados)")
     st.markdown("Selecione qualquer variável do dataset para visualizar como ela se comporta no nosso conjunto filtrado.")
     

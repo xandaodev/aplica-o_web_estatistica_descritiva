@@ -177,7 +177,8 @@ try:
         opacity=0.7,
         marginal_y="violin",
         marginal_x="histogram",
-        title="Dispersão: Idade vs Valor do Crédito",
+        trendline="ols", # adiciona a linha de regressão visual
+        title="Dispersão: Idade vs Valor do Crédito (com Linhas de Tendência)",
         labels=dicionario_colunas 
     )
     st.plotly_chart(fig_scatter, use_container_width=True)

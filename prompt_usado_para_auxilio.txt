@@ -1,5 +1,1 @@
-fala gemini estou desenvolvendo um dashboard interativo em streamlit usando python e plotly para analisar um dataset sobre análise de risco de crédito de um banco na alemanha. ja tenho a estrutura básica pronta, mas preciso de ajuda com duas implementações específicas para melhorar a interface:
-
-quero adicionar uma seção no final onde o usuário possa selecionar qualquer coluna do dataframe através de um st.selectbox, como posso fazer uma verificação no código para que, se a coluna escolhida for numerica, ele faça um histograma, e se for de texto, ele faça um gráfico de barras agrupado?
-
-o arquivo possui colunas e dados internos em inglês e em alguns deles está resumido/difícil de compreender. qual é a melhor prática para traduzir o nome dessas colunas e os valores internos para português apenas na camada visual, mantendo meu arquivo .csv bruto intacto?
+fala gemini, como implemento em python, usando a biblioteca statsmodels, uma regressão linear (OLS) para testar o 'Valor do empréstimo' (variável contínua) e uma regressão de Poisson para o 'Número de empréstimos' (contagem discreta) usando a 'Idade' como variavel independente na população global do meu dataset? preciso de ajuda apenas com a sintaxe para rodar os modelos e extrair o P-value e o R-Quadrado para exibi-los no meu dashboard em streamlit

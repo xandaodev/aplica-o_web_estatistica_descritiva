@@ -1,7 +1,9 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import statsmodels.formula.api as smf # Nova importação para os modelos de regressão
+import statsmodels.formula.api as smf
+import statsmodels.stats.api as sms 
+import numpy as np 
 
 # configuração e carregamento inicial da página
 st.set_page_config(page_title="Estatística UFSJ - Crédito", layout="wide")
@@ -184,55 +186,91 @@ try:
     st.plotly_chart(fig_scatter, use_container_width=True)
     st.markdown("---")
 
-    # ESTATÍSTICA INFERENCIAL - REGRESSÕES
-    st.subheader("🔬 Análise Inferencial: Modelagem e Teste de Hipóteses")
-    st.markdown("Testando matematicamente as variáveis em todo o conjunto de dados (População Global), independente do filtro de categorias.")
 
-    col_inf1, col_inf2 = st.columns(2)
+    # ESTATÍSTICA INFERENCIAL - REGRESSÕES E DIAGNÓSTICOS (NOVO)
 
-    with col_inf1:
-        st.markdown("**1. Valor do Empréstimo x Idade**")
-        st.caption("Modelo: Regressão Linear Múltipla (OLS) | Variável Contínua")
+    
+    st.subheader("🔬 Análise Inferencial: Regressões, Efeitos Não-Lineares e Diagnósticos")
+    st.markdown("Evolução dos modelos: Passando da regressão simples para polinomial (Idade²) e diagnosticando a validade antes de confiar no P-valor.")
+
+    import numpy as np #necessário para a transformação quadrática
+
+    #cria abas para separar bem os 4 modelos exigidos
+    tab1, tab2 = st.tabs(["1. Valor do Empréstimo (Regressão Linear)", "2. Número de Empréstimos (Regressão de Poisson)"])
+
+    with tab1:
+        st.markdown("### Variável Alvo: Valor do Empréstimo (Contínua)")
+        col_m1, col_m2 = st.columns(2)
         
-        try:
-            # UPGRADE: data=df para rodar na população global, independente do motivo
-            modelo_valor = smf.ols('Credit_amount ~ Age_in_years', data=df).fit()
-            p_val_valor = modelo_valor.pvalues.get('Age_in_years', 1)
-            r2_valor = modelo_valor.rsquared # UPGRADE: Pega o R-Quadrado
-            
-            c1, c2 = st.columns(2)
-            c1.metric("P-Value (Idade)", f"{p_val_valor:.4f}")
-            c2.metric("R² (Poder de Explicação)", f"{r2_valor:.4f}")
-            
-            if p_val_valor < 0.05:
-                st.success(f"Significativo (p < 0.05). Porém, a idade explica apenas {r2_valor*100:.2f}% da variação do valor do empréstimo.")
-            else:
-                st.warning("Sem Significância (p >= 0.05). A idade não é uma preditora estatisticamente válida para prever o valor financeiro.")
-        except Exception as e:
-            st.error("Erro ao calcular OLS.")
+        # Modelo 1: OLS simples
+        modelo_valor_simples = smf.ols('Credit_amount ~ Age_in_years', data=df).fit()
+        # Modelo 2: OLS polinomial (quadrático)
+        modelo_valor_quad = smf.ols('Credit_amount ~ Age_in_years + I(Age_in_years**2)', data=df).fit()
 
-    with col_inf2:
-        st.markdown("**2. N° de Empréstimos x Idade**")
-        st.caption("Modelo: Regressão de Poisson | Variável de Contagem Discreta")
+        with col_m1:
+            st.info("**Modelo 1: Regressão Linear Simples**")
+            st.markdown("Fórmula: `Valor ~ Idade`")
+            st.metric("P-Valor (Idade)", f"{modelo_valor_simples.pvalues.get('Age_in_years', 1):.4f}")
+            st.metric("Critério AIC (Menor é melhor)", f"{modelo_valor_simples.aic:.1f}")
         
-        try:
-            #data=df para rodar na população global
-            modelo_qtd = smf.poisson('Number_of_existing_credits_at_this_bank ~ Age_in_years', data=df).fit()
-            p_val_qtd = modelo_qtd.pvalues.get('Age_in_years', 1)
-            pr2_qtd = modelo_qtd.prsquared # UPGRADE: Pseudo R-Quadrado de McFadden
+        with col_m2:
+            st.success("**Modelo 2: Regressão Polinomial (Idade²)**")
+            st.markdown("Fórmula: `Valor ~ Idade + Idade²`")
+            st.metric("P-Valor (Idade²)", f"{modelo_valor_quad.pvalues.get('I(Age_in_years ** 2)', 1):.4f}")
+            st.metric("Critério AIC (Menor é melhor)", f"{modelo_valor_quad.aic:.1f}")
+        
+        st.markdown("#### Diagnóstico dos Modelos (OLS):")
+        st.write(f"- **Comparação (AIC):** O modelo com menor AIC se ajusta melhor à realidade. AIC Simples: {modelo_valor_simples.aic:.1f} vs AIC Quadrático: {modelo_valor_quad.aic:.1f}.")
+        # Teste de Normalidade dos Resíduos (Jarque-Bera)
+        jb_pvalue = sms.jarque_bera(modelo_valor_quad.resid)[1]
+        st.write(f"- **Normalidade dos Resíduos (Jarque-Bera p-value):** {jb_pvalue:.4e}")
+        if jb_pvalue < 0.05:
+            st.error("ALERTA DE DIAGNÓSTICO: O p-valor do Jarque-Bera é menor que 0.05. Os resíduos não são normais. Logo, os P-valores da Idade acima não são 100% confiáveis (o modelo falhou na premissa da Normalidade).")
+        else:
+            st.success("DIAGNÓSTICO OK: Resíduos normais, podemos confiar no P-Valor das idades.")
+
+    with tab2:
+        st.markdown("### Variável Alvo: Número de Empréstimos (Contagem Discreta)")
+        col_m3, col_m4 = st.columns(2)
+
+        # Modelo 3: poisson simples
+        modelo_qtd_simples = smf.poisson('Number_of_existing_credits_at_this_bank ~ Age_in_years', data=df).fit(disp=0)
+        # Modelo 4: poisson polinomial (Quadrático)
+        modelo_qtd_quad = smf.poisson('Number_of_existing_credits_at_this_bank ~ Age_in_years + I(Age_in_years**2)', data=df).fit(disp=0)
+
+        with col_m3:
+            st.info("**Modelo 3: Regressão de Poisson Simples**")
+            st.markdown("Fórmula: `N° Empréstimos ~ Idade`")
+            st.metric("P-Valor (Idade)", f"{modelo_qtd_simples.pvalues.get('Age_in_years', 1):.4f}")
+            st.metric("Critério AIC", f"{modelo_qtd_simples.aic:.1f}")
+        
+        with col_m4:
+            st.success("**Modelo 4: Regressão de Poisson Polinomial**")
+            st.markdown("Fórmula: `N° Empréstimos ~ Idade + Idade²`")
+            st.metric("P-Valor (Idade²)", f"{modelo_qtd_quad.pvalues.get('I(Age_in_years ** 2)', 1):.4f}")
+            st.metric("Critério AIC", f"{modelo_qtd_quad.aic:.1f}")
             
-            c1, c2 = st.columns(2)
-            c1.metric("P-Value (Idade)", f"{p_val_qtd:.4f}")
-            c2.metric("Pseudo R²", f"{pr2_qtd:.4f}")
-            
-            if p_val_qtd < 0.05:
-                st.success("Significativo (p < 0.05). Existe relação matemática entre a idade e a quantidade de pedidos que o cliente tem no banco.")
-            else:
-                st.warning("Sem Significância (p >= 0.05). A idade não afeta o número de empréstimos do cliente.")
-        except Exception as e:
-            st.error("Erro ao calcular Poisson.")
+        st.markdown("#### Diagnóstico dos Modelos (Poisson):")
+        st.write("- Na regressão de Poisson, a média deve ser igual à variância. Avaliamos isso pelo teste de Superdispersão (Pearson Chi2 / Graus de Liberdade). O valor ideal é 1.0.")
+        
+        dispersao_simples = sum(modelo_qtd_simples.resid_pearson**2) / modelo_qtd_simples.df_resid
+        dispersao_quad = sum(modelo_qtd_quad.resid_pearson**2) / modelo_qtd_quad.df_resid
+        
+        st.write(f"- Dispersão Modelo Simples: **{dispersao_simples:.3f}**")
+        st.write(f"- Dispersão Modelo Quadrático: **{dispersao_quad:.3f}**")
+        
+        if dispersao_quad > 1.2:
+            st.error("ALERTA DE DIAGNÓSTICO: Existe Superdispersão (> 1.2). O modelo de Poisson clássico está falhando em capturar a variância dos dados. O ideal seria evoluir para uma Regressão Binomial Negativa para que os P-Valores fossem confiáveis.")
+        else:
+            st.success("DIAGNÓSTICO OK: O modelo de Poisson não apresenta superdispersão severa. A premissa está razoavelmente válida.")
             
     st.markdown("---")
+
+
+
+
+
+
 
     # exploração dinâmica
     st.subheader("🔄 Exploração Dinâmica (Usando todos os dados)")

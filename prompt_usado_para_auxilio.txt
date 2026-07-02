@@ -1,1 +1,3 @@
-fala gemini, como implemento em python, usando a biblioteca statsmodels, uma regressão linear (OLS) para testar o 'Valor do empréstimo' (variável contínua) e uma regressão de Poisson para o 'Número de empréstimos' (contagem discreta) usando a 'Idade' como variavel independente na população global do meu dataset? preciso de ajuda apenas com a sintaxe para rodar os modelos e extrair o P-value e o R-Quadrado para exibi-los no meu dashboard em streamlit
+fala gemini, me ajuda na minha ultima entrega de um trabalho de estatistica aqui. preciso de ajudar pra atualizar meus modelos de regressao OLS e Poisson usando a bibliotyeca statsmodel, quero incluir o termo quadratico "idade ao quadrado" e testar as relacoes nao lineares
+
+preciso tambem de ajuda na sintaxe e execucao de testes de normalidade de jarque bera pros residuos do OLS e a superdispersao de pearson no modelo de Poisson

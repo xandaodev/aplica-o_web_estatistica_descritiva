@@ -1,3 +1,0 @@
-fala gemini, me ajuda na minha ultima entrega de um trabalho de estatistica aqui. preciso de ajudar pra atualizar meus modelos de regressao OLS e Poisson usando a bibliotyeca statsmodel, quero incluir o termo quadratico "idade ao quadrado" e testar as relacoes nao lineares
-
-preciso tambem de ajuda na sintaxe e execucao de testes de normalidade de jarque bera pros residuos do OLS e a superdispersao de pearson no modelo de Poisson

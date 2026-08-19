@@ -1,5 +1,6 @@
-streamlit
-pandas
-plotly
-matplotlib
-statsmodels
+streamlit>=1.35
+pandas>=2.1
+plotly>=5.20
+statsmodels>=0.14
+numpy>=1.26
+pytest>=8.0
